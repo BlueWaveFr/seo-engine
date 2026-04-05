@@ -1,0 +1,32 @@
+{
+    "name": "seo-expert/seo-engine",
+    "description": "SEO Engine - Shared services and entities for SEO platform",
+    "type": "library",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.4",
+        "ext-redis": "*",
+        "doctrine/doctrine-bundle": "^3.0",
+        "doctrine/orm": "^3.0",
+        "google/apiclient": "^2.18",
+        "guzzlehttp/guzzle": "^7.8",
+        "psr/log": "^3.0",
+        "symfony/http-client": "^8.0",
+        "symfony/mailer": "^8.0",
+        "symfony/twig-bundle": "^8.0",
+        "symfony/validator": "^8.0",
+        "symfony/uid": "^8.0",
+        "symfony/messenger": "^8.0",
+        "symfony/security-bundle": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SeoExpert\\Engine\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
