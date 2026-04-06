@@ -65,9 +65,15 @@ class ApiKey
     public const PROVIDER_W3C_VALIDATOR = 'w3c_validator';
     public const PROVIDER_CLOUDFLARE = 'cloudflare';
     public const PROVIDER_DATAFORSEO = 'dataforseo';
+    public const PROVIDER_OPENAI = 'openai';
+    public const PROVIDER_GOOGLE_AI = 'google_ai';
+    public const PROVIDER_PERPLEXITY = 'perplexity';
 
     public const PROVIDERS = [
         self::PROVIDER_ANTHROPIC => 'Anthropic (Claude AI)',
+        self::PROVIDER_OPENAI => 'OpenAI (ChatGPT)',
+        self::PROVIDER_GOOGLE_AI => 'Google AI (Gemini)',
+        self::PROVIDER_PERPLEXITY => 'Perplexity AI',
         self::PROVIDER_AHREFS => 'Ahrefs',
         self::PROVIDER_GOOGLE_OAUTH => 'Google OAuth (Search Console)',
         self::PROVIDER_GOOGLE_INDEXING => 'Google Indexing API',

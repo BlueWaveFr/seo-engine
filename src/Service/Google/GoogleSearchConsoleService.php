@@ -336,7 +336,7 @@ class GoogleSearchConsoleService
 
         // Get daily performance
         try {
-            $data['daily'] = $this->getDailyPerformance($siteUrl, 28);
+            $data['daily'] = $this->getDailyPerformance($siteUrl, 90);
         } catch (\Exception $e) {
             $errors['daily'] = $e->getMessage();
             $this->logger->warning('Failed to fetch Search Console daily data: ' . $e->getMessage());

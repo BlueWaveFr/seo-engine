@@ -15,6 +15,7 @@ class LlmVisibilityService
         private readonly string $anthropicApiKey,
         private readonly string $openaiApiKey,
         private readonly string $googleAiApiKey,
+        private readonly string $perplexityApiKey = '',
     ) {}
 
     /**
@@ -61,6 +62,15 @@ class LlmVisibilityService
                 } catch (\Exception $e) {
                     $this->logger->warning('Gemini query failed for keyword "' . $keyword . '": ' . $e->getMessage());
                     $llmResponses['gemini'] = null;
+                }
+            }
+
+            if ($this->perplexityApiKey) {
+                try {
+                    $llmResponses['perplexity'] = $this->queryPerplexity($prompt);
+                } catch (\Exception $e) {
+                    $this->logger->warning('Perplexity query failed for keyword "' . $keyword . '": ' . $e->getMessage());
+                    $llmResponses['perplexity'] = null;
                 }
             }
 
@@ -203,6 +213,27 @@ class LlmVisibilityService
         return $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
     }
 
+    private function queryPerplexity(string $prompt): string
+    {
+        $response = $this->httpClient->request('POST', 'https://api.perplexity.ai/chat/completions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->perplexityApiKey,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'model' => 'sonar',
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+                'max_tokens' => 1024,
+            ],
+            'timeout' => 45, // Perplexity does web search, can be slower
+        ]);
+
+        $data = $response->toArray();
+        return $data['choices'][0]['message']['content'] ?? '';
+    }
+
     /**
      * Analyze a LLM response to find domain mentions
      */
@@ -323,6 +354,7 @@ class LlmVisibilityService
             'claude' => 'Claude (Anthropic)',
             'chatgpt' => 'ChatGPT (OpenAI)',
             'gemini' => 'Gemini (Google)',
+            'perplexity' => 'Perplexity AI',
             default => ucfirst($key),
         };
     }
