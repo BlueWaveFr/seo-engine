@@ -66,6 +66,15 @@ class Subscription
     #[Groups(['subscription:read'])]
     private ?\DateTimeImmutable $trialEndsAt = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeCustomerId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripeSubscriptionId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $stripePriceId = null;
+
     #[ORM\Column]
     #[Groups(['subscription:read'])]
     private \DateTimeImmutable $createdAt;
@@ -234,6 +243,39 @@ class Subscription
     public function getUpdatedAt(): \DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function getStripeCustomerId(): ?string
+    {
+        return $this->stripeCustomerId;
+    }
+
+    public function setStripeCustomerId(?string $stripeCustomerId): static
+    {
+        $this->stripeCustomerId = $stripeCustomerId;
+        return $this;
+    }
+
+    public function getStripeSubscriptionId(): ?string
+    {
+        return $this->stripeSubscriptionId;
+    }
+
+    public function setStripeSubscriptionId(?string $stripeSubscriptionId): static
+    {
+        $this->stripeSubscriptionId = $stripeSubscriptionId;
+        return $this;
+    }
+
+    public function getStripePriceId(): ?string
+    {
+        return $this->stripePriceId;
+    }
+
+    public function setStripePriceId(?string $stripePriceId): static
+    {
+        $this->stripePriceId = $stripePriceId;
+        return $this;
     }
 
     #[Groups(['subscription:read', 'company:read'])]
