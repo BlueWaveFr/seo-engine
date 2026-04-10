@@ -2,6 +2,8 @@
 
 namespace SeoExpert\Engine\Service\Google;
 
+use SeoExpert\Engine\Entity\ApiKey;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -27,11 +29,25 @@ class SafeBrowsingService
         'IOS',
     ];
 
+    private string $effectiveApiKey;
+
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         private readonly string $apiKey,
-    ) {}
+        private readonly ?EntityManagerInterface $entityManager = null,
+    ) {
+        $this->effectiveApiKey = $this->apiKey;
+        if ($this->entityManager) {
+            try {
+                $dbKey = $this->entityManager->getRepository(ApiKey::class)
+                    ->findOneBy(['provider' => ApiKey::PROVIDER_GOOGLE_SAFE_BROWSING, 'isActive' => true]);
+                if ($dbKey && $dbKey->getApiKey()) {
+                    $this->effectiveApiKey = $dbKey->getApiKey();
+                }
+            } catch (\Exception $e) {}
+        }
+    }
 
     /**
      * Check if a URL is safe according to Google Safe Browsing
@@ -72,7 +88,7 @@ class SafeBrowsingService
             ];
 
             $response = $this->httpClient->request('POST', self::API_URL, [
-                'query' => ['key' => $this->apiKey],
+                'query' => ['key' => $this->effectiveApiKey],
                 'json' => $requestBody,
                 'timeout' => 30,
             ]);

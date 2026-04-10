@@ -2,18 +2,34 @@
 
 namespace SeoExpert\Engine\Service\Google;
 
+use SeoExpert\Engine\Entity\ApiKey;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class PageSpeedInsightsService
 {
     private const API_URL = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
+    private string $effectiveApiKey;
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         private readonly string $apiKey,
-    ) {}
+        private readonly ?EntityManagerInterface $entityManager = null,
+    ) {
+        // Try DB first, then fall back to env var
+        $this->effectiveApiKey = $this->apiKey;
+        if ($this->entityManager) {
+            try {
+                $dbKey = $this->entityManager->getRepository(ApiKey::class)
+                    ->findOneBy(['provider' => ApiKey::PROVIDER_GOOGLE_PAGESPEED, 'isActive' => true]);
+                if ($dbKey && $dbKey->getApiKey()) {
+                    $this->effectiveApiKey = $dbKey->getApiKey();
+                }
+            } catch (\Exception $e) {}
+        }
+    }
 
     /**
      * Analyze a URL with PageSpeed Insights
@@ -31,7 +47,7 @@ class PageSpeedInsightsService
             // Google API expects: category=PERFORMANCE&category=ACCESSIBILITY (not category[0]=...)
             $queryParts = [
                 'url=' . urlencode($url),
-                'key=' . urlencode($this->apiKey),
+                'key=' . urlencode($this->effectiveApiKey),
                 'strategy=' . urlencode($strategy),
             ];
 

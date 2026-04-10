@@ -2,19 +2,40 @@
 
 namespace SeoExpert\Engine\Service\Google;
 
+use SeoExpert\Engine\Entity\ApiKey;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class CustomSearchService
 {
     private const API_URL = 'https://www.googleapis.com/customsearch/v1';
+    private string $effectiveApiKey;
+    private string $effectiveSearchEngineId;
 
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         private readonly string $apiKey,
-        private readonly string $searchEngineId, // CX ID
-    ) {}
+        private readonly string $searchEngineId,
+        private readonly ?EntityManagerInterface $entityManager = null,
+    ) {
+        $this->effectiveApiKey = $this->apiKey;
+        $this->effectiveSearchEngineId = $this->searchEngineId;
+        if ($this->entityManager) {
+            try {
+                $dbKey = $this->entityManager->getRepository(ApiKey::class)
+                    ->findOneBy(['provider' => ApiKey::PROVIDER_GOOGLE_CUSTOM_SEARCH, 'isActive' => true]);
+                if ($dbKey && $dbKey->getApiKey()) {
+                    $this->effectiveApiKey = $dbKey->getApiKey();
+                    $config = $dbKey->getAdditionalConfig() ?? [];
+                    if (!empty($config['search_engine_id'])) {
+                        $this->effectiveSearchEngineId = $config['search_engine_id'];
+                    }
+                }
+            } catch (\Exception $e) {}
+        }
+    }
 
     /**
      * Get estimated number of indexed pages for a domain
@@ -30,7 +51,7 @@ class CustomSearchService
 
         try {
             // Check if API is configured
-            if (empty($this->apiKey) || empty($this->searchEngineId)) {
+            if (empty($this->effectiveApiKey) || empty($this->effectiveSearchEngineId)) {
                 return [
                     'domain' => $domain,
                     'indexed_pages' => null,
@@ -42,8 +63,8 @@ class CustomSearchService
             // Use site: operator to find indexed pages
             $response = $this->httpClient->request('GET', self::API_URL, [
                 'query' => [
-                    'key' => $this->apiKey,
-                    'cx' => $this->searchEngineId,
+                    'key' => $this->effectiveApiKey,
+                    'cx' => $this->effectiveSearchEngineId,
                     'q' => "site:{$searchDomain}",
                     'num' => 1, // We only need the count, not results
                 ],
@@ -157,7 +178,7 @@ class CustomSearchService
 
         try {
             // Check if API is configured
-            if (empty($this->apiKey) || empty($this->searchEngineId)) {
+            if (empty($this->effectiveApiKey) || empty($this->effectiveSearchEngineId)) {
                 return [
                     'domain' => $domain,
                     'total_indexed' => null,
@@ -169,8 +190,8 @@ class CustomSearchService
 
             $response = $this->httpClient->request('GET', self::API_URL, [
                 'query' => [
-                    'key' => $this->apiKey,
-                    'cx' => $this->searchEngineId,
+                    'key' => $this->effectiveApiKey,
+                    'cx' => $this->effectiveSearchEngineId,
                     'q' => "site:{$searchDomain}",
                     'num' => $count,
                     'start' => $start,
@@ -228,8 +249,8 @@ class CustomSearchService
             // Search for exact URL using info: operator alternative
             $response = $this->httpClient->request('GET', self::API_URL, [
                 'query' => [
-                    'key' => $this->apiKey,
-                    'cx' => $this->searchEngineId,
+                    'key' => $this->effectiveApiKey,
+                    'cx' => $this->effectiveSearchEngineId,
                     'q' => "\"" . $url . "\"", // Exact match search
                     'num' => 1,
                 ],
