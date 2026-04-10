@@ -19,7 +19,7 @@ class EeatLightService
         $html = $this->fetchHtml($url);
 
         $doc = new \DOMDocument();
-        @$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_NOERROR);
+        @$doc->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOERROR | LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $xpath = new \DOMXPath($doc);
 
         $eeat = $this->extractEeatSignals($xpath, $html, $url);

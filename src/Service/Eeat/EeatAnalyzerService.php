@@ -49,7 +49,7 @@ class EeatAnalyzerService
 
         $html = $this->fetchHtml($url);
         $doc = new \DOMDocument();
-        @$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_NOERROR);
+        @$doc->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOERROR | LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $xpath = new \DOMXPath($doc);
 
         // Extract all raw signals
@@ -166,7 +166,7 @@ class EeatAnalyzerService
     {
         $html = $this->fetchHtml($url);
         $doc = new \DOMDocument();
-        @$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_NOERROR);
+        @$doc->loadHTML('<?xml encoding="UTF-8">' . $html, LIBXML_NOERROR | LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $xpath = new \DOMXPath($doc);
 
         return $this->extractAllSignals($xpath, $html, $url);
